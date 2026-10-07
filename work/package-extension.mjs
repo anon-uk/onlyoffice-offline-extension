@@ -86,7 +86,7 @@ fs.mkdirSync(root + '/icons', { recursive: true });
 for (const size of [16, 32, 48, 128]) await sharp(Buffer.from(mark)).resize(size,size).png().toFile(root + '/icons/onlyoffice-' + size + '.png');
 const icons = Object.fromEntries([16,32,48,128].map(size => [size, 'icons/onlyoffice-' + size + '.png']));
 fs.writeFileSync(root + '/manifest.json', JSON.stringify({
-  manifest_version: 3, name: 'ONLYOFFICE Offline (Unofficial)', version: '0.6.0',
+  manifest_version: 3, name: 'ONLYOFFICE Offline (Unofficial)', version: '0.6.1',
   description: 'Unofficial offline ONLYOFFICE document, spreadsheet and presentation editors. Use computer fonts and save local files.',
   icons, action: { default_title: 'Open ONLYOFFICE Offline', default_icon: icons },
   background: { service_worker: 'background.js' },
