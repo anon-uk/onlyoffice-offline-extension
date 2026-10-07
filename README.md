@@ -37,7 +37,7 @@ Choose **Print** in the native File menu, use the native Print toolbar control, 
 
 This is not an official ONLYOFFICE release. ONLYOFFICE is a trademark of Ascensio System SIA. Original logos and notices are retained. See `LICENSE`, `NOTICE.md`, `FONT-NOTICE.md` and `SVAL-LICENSE`.
 
-`ONLYOFFICE-Offline-Source.zip` contains integration source, packaging scripts, pinned upstream references and validation scripts. Installation needs only the extension ZIP.
+This repository contains integration source, packaging scripts, pinned upstream references and validation scripts.
 
 The landing hub now matches ONLYOFFICE’s flat header, sidebar and document icons, with light/dark colors following your system preference.
 
