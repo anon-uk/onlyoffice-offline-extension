@@ -27,3 +27,9 @@ SFNT metadata/style/Unicode fallback generation, bounded converter font sets,
 corrected font picker name lookup, core-only menu policy, disabled
 macros, and validated Office/OpenDocument/RTF input/export and PDF download. Native editor UI is retained for the core
 workflow.
+
+AI-assisted development disclosure: this derivative’s extension integration,
+offline workarounds, hub, packaging, tests and documentation were substantially
+generated and revised using OpenAI Codex under the repository owner’s direction.
+Original ONLYOFFICE and other upstream work remains credited to its authors.
+AI-assisted reviews and recorded tests are not an independent human audit.
