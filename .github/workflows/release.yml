@@ -1,0 +1,89 @@
+name: Build and publish extension release
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: extension-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Archive integration source and restore pinned upstream
+        run: |
+          mkdir -p outputs
+          git archive --format=zip --prefix='ONLYOFFICE Offline Source/' -o outputs/ONLYOFFICE-Offline-Source.zip HEAD
+          git clone https://github.com/agentbridges-ai/onlyoffice-browser.git work/upstream-runtime
+          git -C work/upstream-runtime checkout d15d12b6945be4d8b0f3aa1806120e740d2950ee
+          cp -R work/onlyoffice-browser/. work/upstream-runtime/
+          mv work/onlyoffice-browser work/integration-overlay
+          mv work/upstream-runtime work/onlyoffice-browser
+      - name: Install pinned dependencies
+        working-directory: work/onlyoffice-browser
+        run: |
+          npm install -g pnpm@11.4.0
+          pnpm install --frozen-lockfile
+      - name: Typecheck and build
+        working-directory: work/onlyoffice-browser
+        run: |
+          pnpm exec tsc --noEmit
+          pnpm exec vite build -c vite.extension.config.ts
+      - name: Package and verify release assets
+        id: package
+        run: |
+          node work/package-extension.mjs
+          python3 - <<'PY'
+          import hashlib, json, os, shutil, zipfile
+          from pathlib import Path
+          root = Path('work/onlyoffice-browser/extension-build-v0.6')
+          for name in ['README.md', 'VALIDATION.md']:
+              if Path(name).exists(): shutil.copy2(name, root / name)
+          manifest = json.loads((root / 'manifest.json').read_text())
+          assert manifest['version'] == '0.6.0'
+          for icon in manifest['icons'].values(): assert (root / icon).is_file()
+          assert 'AI-assisted development' in (root / 'README.md').read_text()
+          with zipfile.ZipFile('outputs/ONLYOFFICE-Offline.zip', 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+              for file in sorted(root.rglob('*')):
+                  if file.is_file(): archive.write(file, Path('ONLYOFFICE Offline') / file.relative_to(root))
+          sums = []
+          for file in sorted(Path('outputs').glob('*.zip')):
+              with zipfile.ZipFile(file) as archive: assert archive.testzip() is None
+              digest = hashlib.file_digest(file.open('rb'), 'sha256').hexdigest()
+              sums.append(f'{digest}  {file.name}')
+          Path('outputs/SHA256SUMS').write_text('\n'.join(sums) + '\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output: output.write('version=' + manifest['version'] + '\n')
+          PY
+      - name: Publish ZIP assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          cat > outputs/release-notes.md <<'NOTES'
+          Experimental unofficial offline ONLYOFFICE extension for Chromium browsers.
+
+          Download **ONLYOFFICE-Offline.zip** to install: extract it, open chrome://extensions, enable Developer mode, and Load unpacked the ONLYOFFICE Offline folder. **ONLYOFFICE-Offline-Source.zip** contains the integration source and build instructions, not a ready-to-load extension. SHA256SUMS verifies both archives.
+
+          Includes local recent documents, return-to-hub controls, comments/review, local Office/ODF/RTF editing and native PDF export/printing. Computer fonts require permission or font-file imports. See README and VALIDATION for supported features and limitations.
+
+          Credits: ONLYOFFICE editors by Ascensio System SIA; browser adaptation by agentbridges-ai/onlyoffice-browser; upstream converter and Sval notices are included. Distributed with AGPL-3.0 and the included upstream notices/additional terms. This project is not affiliated with or endorsed by ONLYOFFICE.
+
+          **AI disclosure:** Extension integration, workarounds, UI, packaging, tests and documentation were substantially generated and revised with OpenAI Codex under the repository owner's direction. AI-assisted review and automated checks are not an independent human security audit. Upstream code is credited separately. No AI service is used by the extension's document-editing workflow.
+          NOTES
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release upload "v$VERSION" outputs/ONLYOFFICE-Offline.zip outputs/ONLYOFFICE-Offline-Source.zip outputs/SHA256SUMS --clobber
+            gh release edit "v$VERSION" --notes-file outputs/release-notes.md
+          else
+            gh release create "v$VERSION" outputs/ONLYOFFICE-Offline.zip outputs/ONLYOFFICE-Offline-Source.zip outputs/SHA256SUMS --target "$GITHUB_SHA" --title "ONLYOFFICE Offline $VERSION" --notes-file outputs/release-notes.md
+          fi
