@@ -1,56 +1,64 @@
-# ONLYOFFICE Offline 0.6.0 — unofficial Chrome extension
+# ONLYOFFICE Offline 0.6.0 — unofficial Chromium extension
 
-Real ONLYOFFICE document, spreadsheet and presentation editors, with the original core editing UI and a local WebAssembly converter. No document font library is bundled.
+Run the real ONLYOFFICE document, spreadsheet and presentation editors locally in a Chromium browser, using a WebAssembly converter. This is an experimental, unofficial modified derivative, not an official ONLYOFFICE release.
 
-## Install or update
+## Download and install
+
+Download **[ONLYOFFICE-Offline.zip from the latest release](https://github.com/anon-uk/onlyoffice-offline-extension/releases/latest)**. The separate `ONLYOFFICE-Offline-Source.zip` contains the integration source and build instructions; it is not the installable extension.
 
 1. Extract `ONLYOFFICE-Offline.zip`.
-2. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-3. Select the extracted `ONLYOFFICE Offline` folder containing `manifest.json`.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Choose **Load unpacked** and select the extracted `ONLYOFFICE Offline` folder containing `manifest.json`.
 4. Pin the extension and click its ONLYOFFICE icon.
 
-Save open documents before updating. Replace the old extracted folder with this release, then click **Reload** on its extension card. Keep the extracted folder; Chrome needs it.
+Keep the extracted folder; the browser loads the extension from it. To update, save your open documents, replace the old extracted folder with the new release, and click **Reload** on the extension card. Browser compatibility varies; the recorded checks used Chrome for Testing on macOS Apple Silicon. This project is not published in the Chrome Web Store.
+
+## AI-assisted development disclosure
+
+The extension-specific integration, offline workarounds, landing hub, packaging scripts, tests and documentation were substantially generated and revised with **OpenAI Codex**, an AI coding assistant, under the repository owner's direction. AI-assisted code review and automated/browser checks were used; these do not amount to an independent human security audit or a guarantee of correctness.
+
+The original ONLYOFFICE editors, upstream browser adaptation and converter are third-party projects credited below. This disclosure concerns this repository's modifications and documentation, and does not characterize upstream authors' development practices. The extension's exposed workflow has no AI assistant or external AI service; document editing and conversion run locally.
+
+## Supported workflow
+
+- Open DOCX, XLSX, PPTX, ODT, ODS, ODP and RTF files, or create a document, spreadsheet or presentation.
+- Use the native ONLYOFFICE formatting, tables, shapes and core spreadsheet/presentation controls, plus document comments and tracked changes.
+- **Save** downloads a copy; it does not overwrite the original disk file.
+- **Download As** offers PDF and the editor's Office format, plus ODT/RTF for documents, ODS for spreadsheets and ODP for presentations. Native format-loss warnings remain in place.
+- Use the native header return icon or File-menu return control to return to the hub. Unsaved edits offer **Save and return**, **Discard changes** or **Cancel**.
+- Each extension tab holds one editor. Click the extension icon to open another tab.
+
+For printing, use the native Print control or Ctrl/Cmd+P. The extension renders a PDF locally and opens it in the browser's PDF viewer; use that viewer's Print button to select a printer or Save as PDF. Physical printer output has not been tested.
 
 ## Fonts
 
-On the start page, click **Use computer fonts** and grant Chrome access. The extension reads the actual installed font files exposed by Chrome, builds the native editor's font registry, style mappings, character fallback and picker previews, and supplies the converter with fonts required by the document. The first catalog build reads only metadata tables. Cached startup avoids requesting every font file again. Full outline files load on demand through a 32 MB cache (one larger required file can exceed that limit); the editor also retains font streams it has actually used. Font bytes stay local. Access is reused when Chrome retains permission; validated metadata and picker images are reused by later tabs. Newly listed fonts are scanned as needed. Click **Use computer fonts** again to refresh metadata after replacing an installed font with the same name.
+On the hub, choose **Use computer fonts** and grant Local Font Access permission. Where this API is unavailable or denied, use **Import font files** for TTF, OTF or TTC files. Imported files are remembered in the extension's local browser database; **Clear imported fonts** removes that remembered set.
 
-If font access is denied or unavailable, choose **Import font files** and select TTF, OTF or TTC files. Imports are remembered locally in this extension's browser database. **Clear imported fonts** removes that remembered set. Imported faces include their real regular/bold/italic styles where present. No internet service is required.
+No document font library is bundled. Actual font files exposed by the browser are used with their available styles; missing or unsupported faces use substitutes. Bitmap-only fonts, some platform-specific formats and files over 100 MB are skipped. Exact rendering requires a supported copy of the document's original font. Special engine/UI glyph resources remain part of ONLYOFFICE.
 
-Chrome cannot expose arbitrary browser-rendered font bytes through CSS alone. This workflow therefore needs Local Font Access permission or font files supplied by you. Bitmap fonts, some platform-specific outline formats and files over 100 MB are skipped; the start page lists skipped faces. Missing document fonts use available substitutes. Exact appearance requires a supported copy of the original font. Special UI/engine glyph resources remain part of ONLYOFFICE.
+The first system-font scan reads metadata and can take time. Later tabs reuse validated metadata and picker previews. Full outlines load on demand through a 32 MB cache; one larger required file can exceed this limit, and the editor retains native font streams it uses. This is not a limit on total editor RAM. Click **Use computer fonts** again after replacing an installed font with the same name to refresh its metadata.
 
-## Core workflow
+## Recent documents and local storage
 
-Open DOCX, XLSX, PPTX, ODT, ODS, ODP or RTF, or create a document, spreadsheet or presentation. Each extension tab holds one file; click the extension icon for another tab. Formatting, font selection, tables, shapes and core spreadsheet/presentation tools use the native ONLYOFFICE UI.
+Recent documents retain local copies of opened files and completed saves: at most 20 files, 200 MB total and 50 MB per file. They are snapshots, not live links to files on disk. Unsaved edits are not included. Remove individual entries or clear the list from the hub.
 
-**Save** downloads a copy. It does not overwrite the original file. Recent documents keep local copies of opened files and completed saves, up to 20 files and 200 MB total (50 MB per file). They are snapshots, not live links to the original disk files. Unsaved edits are not included; remove individual entries or clear the list from the hub. Autosave and crash recovery are not provided.
+Document snapshots, imported fonts, font metadata and picker previews can remain in this extension's browser storage. Clearing browser data, changing profiles or removing the extension can remove remembered data. Keep downloaded copies of important documents. Autosave and crash recovery are not provided. This build does not send documents or font files to a document server or AI service.
 
-Image export, macros, cloud collaboration, sharing/history, external plugins/AI, mail merge, signatures, comparison/combination, protection and server-only controls are removed from the exposed workflow. Download As offers PDF and the editor’s native format, plus ODT/RTF for documents, ODS for spreadsheets and ODP for presentations. ONLYOFFICE’s format-loss dialogs remain in place.
+## Limitations and validation
 
-This remains an experimental derivative. Complex files and every remaining ribbon command have not been exhaustively tested. See `Validation.md` for checks and limitations.
+Spell checking, TXT/CSV export, image export, macros, external plugins/AI, cloud collaboration, sharing/server history, mail merge, signatures, comparison/combination and protection are disabled. The TXT encoding flow left the native editor behind a loading overlay in testing, so it is not exposed.
 
-## Printing
+See [Validation.md](Validation.md) and [features-validation.json](features-validation.json) for the checks actually performed. The 0.6.0 workflow checks cover comments/revisions, PDF text, ODT/ODS/ODP/RTF export and reopen rendering, recent-document persistence, and Save/Discard/Cancel navigation. Earlier reports document the 0.5.0 font work. Complex files, every remaining ribbon control and other browser/OS combinations have not been exhaustively tested.
 
-Choose **Print** in the native File menu, use the native Print toolbar control, or press Ctrl/Cmd+P while editing. The extension renders paginated pages locally and opens a PDF in Chrome’s built-in viewer. Use that viewer’s Print button to choose a printer or Save as PDF. No document server is used. This print-preview path is separate from the restricted Download As menu.
+## Source, credits and licenses
 
-## Source and attribution
+Follow [BUILD.md](BUILD.md) to obtain the pinned upstream assets and build the extension. This repository and the source ZIP contain the modified integration and packaging source; the large generated editor binaries are distributed in the installable release ZIP.
 
-This is not an official ONLYOFFICE release. ONLYOFFICE is a trademark of Ascensio System SIA. Original logos and notices are retained. See `LICENSE`, `NOTICE.md`, `FONT-NOTICE.md` and `SVAL-LICENSE`.
+The editors are **ONLYOFFICE**, developed by **Ascensio System SIA**, Copyright (C) 2012–2026. Original logos and copyright notices are retained. ONLYOFFICE is a trademark of Ascensio System SIA. This derivative is not affiliated with or endorsed by ONLYOFFICE.
 
-This repository contains the integration source, packaging scripts and validation scripts. See [BUILD.md](BUILD.md) to obtain the pinned editor assets and build the unpacked extension.
+- Editor source: [ONLYOFFICE/sdkjs](https://github.com/ONLYOFFICE/sdkjs) and [ONLYOFFICE/web-apps](https://github.com/ONLYOFFICE/web-apps).
+- Browser adaptation: [agentbridges-ai/onlyoffice-browser](https://github.com/agentbridges-ai/onlyoffice-browser), pinned to `d15d12b6945be4d8b0f3aa1806120e740d2950ee`.
+- Local converter: [agentbridges-ai/onlyoffice-x2t-wasm](https://github.com/agentbridges-ai/onlyoffice-x2t-wasm).
+- Sval template interpreter: MIT licensed; see [SVAL-LICENSE](SVAL-LICENSE).
 
-The landing hub now matches ONLYOFFICE’s flat header, sidebar and document icons, with light/dark colors following your system preference.
-
-## Review and navigation
-
-The native comments and tracked-changes tools are enabled for offline review. Use the native return icon in the editor header or the File-menu return control to return to the hub. Unsaved changes offer Save and return, Discard changes, or Cancel. Saving also downloads a copy; recent storage never overwrites the original disk file.
-
-ONLYOFFICE editors are developed by Ascensio System SIA, Copyright (C) 2012–2026. The integration modifications are distributed under GNU AGPL v3; original ONLYOFFICE assets retain their copyright notices and logos. Browser adaptation: agentbridges-ai/onlyoffice-browser; converter: agentbridges-ai/onlyoffice-x2t-wasm. Sval retains its MIT notice. This is an unofficial modified derivative, not endorsed by ONLYOFFICE.
-
-## Credits and license
-
-The document, spreadsheet and presentation editors are **ONLYOFFICE**, developed by **Ascensio System SIA**. Copyright (C) Ascensio System SIA 2012–2026. Original ONLYOFFICE logos and copyright notices are retained. This project is an unofficial modified derivative and is not affiliated with or endorsed by ONLYOFFICE. ONLYOFFICE is a trademark of Ascensio System SIA.
-
-Editor source: [ONLYOFFICE/sdkjs](https://github.com/ONLYOFFICE/sdkjs) and [ONLYOFFICE/web-apps](https://github.com/ONLYOFFICE/web-apps). Browser adaptation: [agentbridges-ai/onlyoffice-browser](https://github.com/agentbridges-ai/onlyoffice-browser), pinned to `d15d12b6945be4d8b0f3aa1806120e740d2950ee`. Local converter: [agentbridges-ai/onlyoffice-x2t-wasm](https://github.com/agentbridges-ai/onlyoffice-x2t-wasm). Credit belongs to their respective authors.
-
-The integration modifications are distributed under **GNU AGPL v3**, with the full text in [LICENSE](LICENSE). Upstream components retain their original licenses, copyright notices and any additional terms; see [NOTICE.md](NOTICE.md) and the pinned upstream source. Sval is MIT licensed; its full notice is in [SVAL-LICENSE](SVAL-LICENSE). This repository supplies modified integration source and build instructions alongside links to the original editor and converter source. No system font files or user documents are distributed.
+The integration modifications are distributed under **GNU AGPL v3**, with the full text in [LICENSE](LICENSE). Upstream components retain their original licenses, copyright notices and any additional terms. See [NOTICE.md](NOTICE.md), [FONT-NOTICE.md](FONT-NOTICE.md) and the upstream sources. Original work belongs to its respective authors; AI assistance does not replace those credits or licenses. No system font files or user documents are distributed in the releases.
