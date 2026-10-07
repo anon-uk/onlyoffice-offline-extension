@@ -8,8 +8,10 @@ Download **[ONLYOFFICE-Offline.zip from the latest release](https://github.com/a
 
 1. Extract `ONLYOFFICE-Offline.zip`.
 2. Open `chrome://extensions` and enable **Developer mode**.
-3. Choose **Load unpacked** and select the extracted `ONLYOFFICE Offline` folder containing `manifest.json`.
+3. Choose **Load unpacked** and select the extracted folder that directly contains `manifest.json`. The install ZIP now places `manifest.json` at its root, with no extra nested folder.
 4. Pin the extension and click its ONLYOFFICE icon.
+
+**If Chrome says “Manifest file is missing or unreadable”:** confirm you downloaded `ONLYOFFICE-Offline.zip` (not the source ZIP), extracted it, and selected the folder where `manifest.json` is visible. Do not select the ZIP itself or a parent folder.
 
 Keep the extracted folder; the browser loads the extension from it. To update, save your open documents, replace the old extracted folder with the new release, and click **Reload** on the extension card. Browser compatibility varies; the recorded checks used Chrome for Testing on macOS Apple Silicon. This project is not published in the Chrome Web Store.
 
