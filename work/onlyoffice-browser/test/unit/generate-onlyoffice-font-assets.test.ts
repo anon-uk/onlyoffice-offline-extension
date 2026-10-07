@@ -1,0 +1,222 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, it } from 'vitest';
+
+interface GeneratorOptions {
+  input: string;
+  output: string;
+  image: string;
+  fontSet: string;
+  keepFonts: string[];
+  help: boolean;
+}
+
+interface GeneratorModule {
+  DEFAULT_FONT_GENERATOR_IMAGE: string;
+  FONT_GENERATOR_IMAGE_ENV: string;
+  DEFAULT_FONT_SET: string;
+  FONT_SET_ENV: string;
+  collectFontFiles(inputDir: string): string[];
+  dockerGenerationScript(options: { fontSet: string; keepFonts: string[] }): string;
+  generateOnlyOfficeFontAssets(options: GeneratorOptions): void;
+  isSupportedFontFileName(fileName: string): boolean;
+  parseGenerateFontAssetsArgs(argv: string[], env?: Record<string, string>): GeneratorOptions;
+  validateGenerateFontAssetsOptions(options: GeneratorOptions): {
+    input: string;
+    output: string;
+    image: string;
+    fontSet: string;
+    keepFonts: string[];
+    fontFiles: string[];
+  };
+}
+
+const generator = (await import(
+  pathToFileURL(path.resolve('scripts/generate-onlyoffice-font-assets.mjs')).href
+)) as GeneratorModule;
+const {
+  DEFAULT_FONT_GENERATOR_IMAGE,
+  DEFAULT_FONT_SET,
+  FONT_GENERATOR_IMAGE_ENV,
+  FONT_SET_ENV,
+  collectFontFiles,
+  dockerGenerationScript,
+  generateOnlyOfficeFontAssets,
+  isSupportedFontFileName,
+  parseGenerateFontAssetsArgs,
+  validateGenerateFontAssetsOptions,
+} = generator;
+
+const tempDirs: string[] = [];
+
+function makeTempDir(): string {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'onlyoffice-font-assets-test-'));
+  tempDirs.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const dir of tempDirs.splice(0)) {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+describe('generate-onlyoffice-font-assets options', () => {
+  it('parses required input and output with default image', () => {
+    const options = parseGenerateFontAssetsArgs(['--input', '/fonts', '--output', '/assets'], {});
+
+    expect(options).toEqual({
+      input: '/fonts',
+      output: '/assets',
+      image: DEFAULT_FONT_GENERATOR_IMAGE,
+      fontSet: DEFAULT_FONT_SET,
+      keepFonts: [],
+      help: false,
+    });
+  });
+
+  it('allows image override through env or cli', () => {
+    expect(
+      parseGenerateFontAssetsArgs(['--input', '/fonts', '--output', '/assets'], {
+        [FONT_GENERATOR_IMAGE_ENV]: 'onlyoffice/documentserver:custom',
+      }).image,
+    ).toBe('onlyoffice/documentserver:custom');
+
+    expect(
+      parseGenerateFontAssetsArgs(['--input', '/fonts', '--output', '/assets', '--image', 'custom:tag']).image,
+    ).toBe('custom:tag');
+  });
+
+  it('allows font set override and extra kept font families', () => {
+    expect(
+      parseGenerateFontAssetsArgs(['--input', '/fonts', '--output', '/assets'], {
+        [FONT_SET_ENV]: 'full',
+      }).fontSet,
+    ).toBe('full');
+
+    expect(
+      parseGenerateFontAssetsArgs([
+        '--input',
+        '/fonts',
+        '--output',
+        '/assets',
+        '--font-set',
+        'zh-core',
+        '--keep-font',
+        'Wingdings',
+        '--keep-font',
+        'Symbol',
+      ]),
+    ).toMatchObject({
+      fontSet: 'zh-core',
+      keepFonts: ['Wingdings', 'Symbol'],
+    });
+  });
+
+  it('rejects invalid font set names', () => {
+    const input = makeTempDir();
+    const output = makeTempDir();
+    fs.writeFileSync(path.join(input, 'font.ttf'), '');
+
+    expect(() =>
+      validateGenerateFontAssetsOptions(
+        parseGenerateFontAssetsArgs(['--input', input, '--output', output, '--font-set', 'everything']),
+      ),
+    ).toThrow('Invalid --font-set');
+  });
+
+  it('requires input and output', () => {
+    expect(() => validateGenerateFontAssetsOptions(parseGenerateFontAssetsArgs(['--output', '/assets']))).toThrow(
+      'Missing required --input',
+    );
+    expect(() => validateGenerateFontAssetsOptions(parseGenerateFontAssetsArgs(['--input', '/fonts']))).toThrow(
+      'Missing required --output',
+    );
+  });
+
+  it('rejects an empty input font directory', () => {
+    const input = makeTempDir();
+    const output = makeTempDir();
+
+    expect(() =>
+      validateGenerateFontAssetsOptions(parseGenerateFontAssetsArgs(['--input', input, '--output', output])),
+    ).toThrow('No supported font files found');
+  });
+
+  it('accepts supported office font extensions recursively', () => {
+    const input = makeTempDir();
+    const output = makeTempDir();
+    fs.mkdirSync(path.join(input, 'nested'));
+    fs.writeFileSync(path.join(input, 'nested', 'msyh.ttc'), '');
+    fs.writeFileSync(path.join(input, 'notes.txt'), '');
+
+    const validated = validateGenerateFontAssetsOptions(
+      parseGenerateFontAssetsArgs(['--input', input, '--output', output]),
+    );
+
+    expect(validated.fontFiles).toEqual([path.join(input, 'nested', 'msyh.ttc')]);
+    expect(collectFontFiles(input)).toEqual([path.join(input, 'nested', 'msyh.ttc')]);
+    expect(isSupportedFontFileName('cambria.otc')).toBe(true);
+    expect(isSupportedFontFileName('embedded.tte')).toBe(true);
+    expect(isSupportedFontFileName('notes.txt')).toBe(false);
+  });
+
+  it('does not treat a missing primary fallback font as a selected source index', () => {
+    const script = dockerGenerationScript({ fontSet: 'zh-core', keepFonts: [] });
+
+    expect(script).toContain('def first_available_source(*family_names):');
+    expect(script).toContain('latin_fallback_family_name, latin_fallback_source_index = first_available_source(');
+    expect(script).toContain('cjk_fallback_family_name, cjk_fallback_source_index = first_available_source(');
+    expect(script).toContain('Noto Sans SC');
+    expect(script).not.toContain('first_source_index(find_font_info("Calibri")) or');
+    expect(script).not.toContain('first_source_index(find_font_info("Microsoft YaHei")) or');
+  });
+
+  it('keeps Office symbol and document compatibility fonts in zh-core without exposing them in the font picker', () => {
+    const script = dockerGenerationScript({ fontSet: 'zh-core', keepFonts: [] });
+
+    expect(script).toContain('ZH_CORE_HIDDEN_FONT_FAMILIES');
+    expect(script).toContain('ASCW3');
+    expect(script).toContain('DejaVu Sans');
+    expect(script).toContain('OpenSymbol');
+    expect(script).toContain('Symbola');
+    expect(script).toContain('Wingdings');
+    expect(script).toContain('Symbol');
+    expect(script).toContain('MT Extra');
+    expect(script).toContain('Segoe UI Symbol');
+    expect(script).toContain('MS Gothic');
+    expect(script).toContain('MS PGothic');
+    expect(script).toContain('MS UI Gothic');
+    expect(script).toContain('symbol.ttf');
+    expect(script).toContain('wingdings.ttf');
+    expect(script).toContain('mtextra.ttf');
+    expect(script).toContain('seguisym.ttf');
+    expect(script).toContain('msgothic.ttc');
+    expect(script).toContain('ASC.ttf');
+    expect(script).toContain('ZH_CORE_EXACT_SOURCE_FILE_NAMES_BY_FAMILY');
+    expect(script).toContain('EXTRA_DIR="$EXTRA"');
+    expect(script).toContain('extra_source_path');
+    expect(script).toContain('exact_source_index_for_family');
+    expect(script).toContain('face_index_for_source');
+    expect(script).toContain('source_index = exact_source_index');
+    expect(script).not.toContain(
+      'candidate_index >= 0 and source_file_name(candidate_index) in zh_core_source_file_names',
+    );
+    expect(script).toContain('info[slot_index + 1] = exact_source_face_index');
+    expect(script).toContain('info[0] in zh_core_hidden_font_families');
+    expect(script).toContain('visible_family_names = {info[0] for info in web_infos');
+    expect(script).toContain('"visibleFamilies": sorted(visible_family_names)');
+  });
+
+  it('stages input fonts before cleaning the output directory', () => {
+    const source = generateOnlyOfficeFontAssets.toString();
+
+    expect(source.indexOf('createFontStagingDirectory(validated.fontFiles)')).toBeGreaterThanOrEqual(0);
+    expect(source.indexOf('prepareOutputDirectory(validated.output)')).toBeGreaterThanOrEqual(0);
+    expect(source.indexOf('createFontStagingDirectory(validated.fontFiles)')).toBeLessThan(
+      source.indexOf('prepareOutputDirectory(validated.output)'),
+    );
+  });
+});

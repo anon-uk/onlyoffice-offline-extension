@@ -1,0 +1,280 @@
+export interface OnlyOfficeParticipant {
+  id: number;
+  idOriginal: string;
+  username: string;
+  indexUser: number;
+  connectionId: string;
+  isCloseCoAuthoring: boolean;
+  view: boolean;
+}
+
+export interface OnlyOfficeParticipants {
+  index: number;
+  list: [OnlyOfficeParticipant];
+}
+
+export interface OnlyOfficeFromMessage {
+  type?: string;
+  openCmd?: {
+    url?: string;
+  };
+  changes?: unknown;
+  endSaveChanges?: boolean;
+  [key: string]: any;
+}
+
+export interface OnlyOfficeToMessage {
+  type: string;
+  [key: string]: any;
+}
+
+export type OnlyOfficeMessageResponder = (msg: OnlyOfficeToMessage) => void;
+
+export interface OnlyOfficeMockServer {
+  buildNumber?: number;
+  buildVersion?: string;
+  getInitialChanges?: () => any[];
+  getParticipants: () => OnlyOfficeParticipants;
+  getDocumentOpenData?: (documentUrl: string) => Record<string, string>;
+  getImageURL?: (name: string) => Promise<string>;
+  onAuth?: () => void;
+  onSaveRequest?: () => void | Promise<void>;
+  handleMessage?: (msg: OnlyOfficeFromMessage, respond: OnlyOfficeMessageResponder) => boolean;
+  onMessage: (msg: OnlyOfficeFromMessage) => void;
+  onCorruptionWarning?: (duplicateId: string) => void;
+}
+
+export interface CreateOnlyOfficeMockServerOptions {
+  buildNumber?: number;
+  buildVersion?: string;
+  media?: Record<string, string>;
+  onAuth?: () => void;
+  onSaveRequest?: () => void | Promise<void>;
+  onMessage?: (msg: OnlyOfficeFromMessage) => void;
+  onCorruptionWarning?: (duplicateId: string) => void;
+}
+
+export const LOCAL_ONLYOFFICE_USER_ID = 'local-browser-user';
+export const LOCAL_ONLYOFFICE_USER_NAME = 'Local Browser User';
+
+const LOCAL_PARTICIPANT: OnlyOfficeParticipant = {
+  id: 1,
+  idOriginal: LOCAL_ONLYOFFICE_USER_ID,
+  username: LOCAL_ONLYOFFICE_USER_NAME,
+  indexUser: 0,
+  connectionId: 'local-browser-session',
+  isCloseCoAuthoring: false,
+  view: false,
+};
+
+function stripLeadingDotsAndSlashes(value: string): string {
+  return value.replace(/^(\.\/|\/)+/, '');
+}
+
+export function isOnlyOfficeDirectMediaUrl(value: string): boolean {
+  return /^data:image\//i.test(value) || /^blob:/i.test(value) || /^https?:\/\//i.test(value);
+}
+
+export function getOnlyOfficeMediaCandidates(name: string): string[] {
+  const trimmed = stripLeadingDotsAndSlashes(name);
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(trimmed);
+    } catch {
+      return trimmed;
+    }
+  })();
+
+  const candidates = [name, trimmed, decoded];
+  for (const value of [trimmed, decoded]) {
+    if (value && !value.startsWith('media/')) {
+      candidates.push(`media/${value}`);
+    }
+  }
+
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+export function resolveOnlyOfficeMediaUrl(media: Record<string, string> | undefined, name: string): string {
+  const directUrl = name.trim();
+  if (isOnlyOfficeDirectMediaUrl(directUrl)) {
+    return directUrl;
+  }
+
+  if (!media) {
+    return '';
+  }
+
+  for (const candidate of getOnlyOfficeMediaCandidates(name)) {
+    const url = media[candidate];
+    if (url) {
+      return url;
+    }
+  }
+
+  return '';
+}
+
+function countSavedChanges(changes: unknown): number {
+  if (!changes) {
+    return 0;
+  }
+
+  if (Array.isArray(changes)) {
+    return changes.length;
+  }
+
+  if (typeof changes === 'string') {
+    try {
+      const parsed = JSON.parse(changes) as unknown;
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  return 0;
+}
+
+function getImageUploadCommand(msg: OnlyOfficeFromMessage): OnlyOfficeFromMessage | undefined {
+  if (msg.type === 'imgurls' || msg.c === 'imgurls') return msg;
+  if (msg.type !== 'message') return undefined;
+  if (msg.message && typeof msg.message === 'object' && msg.message.c === 'imgurls') return msg.message;
+  if (typeof msg.message === 'string') {
+    try {
+      const command = JSON.parse(msg.message) as OnlyOfficeFromMessage;
+      return command.c === 'imgurls' ? command : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
+function getImageExtension(url: string): string {
+  const dataMime = /^data:image\/([a-z0-9.+-]+);/i.exec(url)?.[1]?.toLowerCase();
+  if (dataMime) return dataMime === 'jpeg' ? 'jpg' : dataMime.replace('svg+xml', 'svg');
+  const pathname = url.split(/[?#]/, 1)[0];
+  const extension = /\.([a-z0-9]+)$/i.exec(pathname)?.[1]?.toLowerCase();
+  return extension || 'png';
+}
+
+export function createOnlyOfficeMockServer(options: CreateOnlyOfficeMockServerOptions = {}): OnlyOfficeMockServer {
+  const { buildNumber, buildVersion, media, onAuth, onSaveRequest, onMessage, onCorruptionWarning } = options;
+  let changesIndex = 0;
+  let syncChangesIndex = 0;
+  let lastSaveTime = Date.now();
+  let pendingLocalSave = false;
+  let imageUploadIndex = 0;
+
+  const acknowledgeSaveEnd = (respond: OnlyOfficeMessageResponder) => {
+    lastSaveTime = Date.now();
+    respond({
+      type: 'unSaveLock',
+      index: changesIndex,
+      time: lastSaveTime,
+      syncChangesIndex,
+    });
+  };
+
+  const runLocalSaveBeforeAck = (respond: OnlyOfficeMessageResponder, acknowledge: () => void) => {
+    if (!onSaveRequest || !pendingLocalSave) {
+      acknowledge();
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => onSaveRequest())
+      .then(() => {
+        pendingLocalSave = false;
+        acknowledge();
+      })
+      .catch((error) => {
+        console.error('OnlyOffice local save request failed:', error);
+      });
+  };
+
+  return {
+    buildNumber,
+    buildVersion,
+    getInitialChanges: () => [],
+    getParticipants: () => ({
+      index: 0,
+      list: [{ ...LOCAL_PARTICIPANT }],
+    }),
+    getDocumentOpenData: (documentUrl: string) => ({
+      'Editor.bin': documentUrl,
+      ...(media || {}),
+    }),
+    getImageURL: async (name: string) => resolveOnlyOfficeMediaUrl(media, name),
+    onAuth,
+    onSaveRequest,
+    handleMessage: (msg, respond) => {
+      const imageCommand = getImageUploadCommand(msg);
+      if (imageCommand) {
+        const images = Array.isArray(imageCommand.data) ? imageCommand.data : [];
+        const urls = images.map((value: unknown) => {
+          const url = typeof value === 'string' ? value : '';
+          imageUploadIndex += 1;
+          const path = `media/browser-image-${imageUploadIndex}.${getImageExtension(url)}`;
+          if (url && media) media[path] = url;
+          return url ? { url, path } : { url: 'error', path: 'error' };
+        });
+        respond({
+          type: 'imgurls',
+          status: 'ok',
+          data: { urls, error: 0 },
+        });
+        return true;
+      }
+
+      if (msg.type === 'isSaveLock') {
+        respond({
+          type: 'saveLock',
+          saveLock: false,
+          syncChangesIndex,
+        });
+        return true;
+      }
+
+      if (msg.type === 'saveChanges') {
+        const savedChangeCount = countSavedChanges(msg.changes);
+        changesIndex += savedChangeCount;
+        pendingLocalSave = pendingLocalSave || savedChangeCount > 0;
+        if (msg.endSaveChanges === false) {
+          respond({
+            type: 'savePartChanges',
+            changesIndex,
+            syncChangesIndex,
+          });
+          return true;
+        }
+
+        const acknowledgeSave = () => {
+          respond({
+            type: 'saveChanges',
+            changes: [],
+            changesIndex,
+            syncChangesIndex,
+            endSaveChanges: true,
+          });
+          acknowledgeSaveEnd(respond);
+        };
+
+        runLocalSaveBeforeAck(respond, acknowledgeSave);
+        return true;
+      }
+
+      if (msg.type === 'unLockDocument' || msg.type === 'unSaveLock') {
+        runLocalSaveBeforeAck(respond, () => acknowledgeSaveEnd(respond));
+        return true;
+      }
+
+      return false;
+    },
+    onMessage: (msg) => {
+      onMessage?.(msg);
+    },
+    onCorruptionWarning,
+  };
+}

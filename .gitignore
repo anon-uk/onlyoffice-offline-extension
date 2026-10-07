@@ -1,0 +1,6 @@
+node_modules/
+work/onlyoffice-browser/extension-build*/
+work/onlyoffice-browser/public/
+work/browsers/
+*.zip
+.DS_Store

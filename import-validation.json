@@ -1,0 +1,13 @@
+{
+  "permissionDenied": true,
+  "invalidFontRejected": true,
+  "importedFamilies": [
+    "Liberation Serif"
+  ],
+  "rememberedAfterReload": true,
+  "unsupportedBrowserFallback": true,
+  "clearCache": true,
+  "tabIsolation": true,
+  "saveWithBoldItalic": true,
+  "errors": []
+}

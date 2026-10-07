@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>ONLYOFFICE Offline</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body>
+<main id="home">
+  <header class="hub-header"><img src="/onlyoffice-logo.svg" width="196" height="36" alt="ONLYOFFICE"><span>Offline editors</span></header>
+  <div class="hub-layout">
+    <aside class="hub-sidebar"><h1>Local files</h1><button id="open" class="open-button">Open file</button><p>Open a document, spreadsheet or presentation from your computer.</p></aside>
+    <div class="hub-content">
+      <section aria-labelledby="create-heading"><h2 id="create-heading">Create new</h2><div class="document-types">
+        <button data-type="docx" aria-label="Document"><img src="/web-apps/apps/common/main/resources/img/doc-formats/docx.svg" alt="" width="48" height="60"><span>Document</span><small aria-hidden="true">DOCX</small></button>
+        <button data-type="xlsx" aria-label="Spreadsheet"><img src="/web-apps/apps/common/main/resources/img/doc-formats/xlsx.svg" alt="" width="48" height="60"><span>Spreadsheet</span><small aria-hidden="true">XLSX</small></button>
+        <button data-type="pptx" aria-label="Presentation"><img src="/web-apps/apps/common/main/resources/img/doc-formats/pptx.svg" alt="" width="48" height="60"><span>Presentation</span><small aria-hidden="true">PPTX</small></button>
+      </div></section>
+      <section id="font-setup" aria-labelledby="fonts-heading"><h2 id="fonts-heading">Document fonts</h2><p id="font-status" role="status">Choose computer fonts or import font files to start.</p><div class="font-actions">
+        <button id="computer-fonts" data-font-action>Use computer fonts</button><button id="import-fonts" data-font-action>Import font files</button><button id="clear-fonts" data-font-action>Clear imported fonts</button>
+      </div><input id="font-files" type="file" hidden multiple accept=".ttf,.otf,.ttc"><details><summary>Font details</summary><pre id="font-details"></pre></details></section>
+      <p id="status" role="status"></p><p class="save-note">Save downloads a copy to your computer.</p>
+    </div>
+  </div>
+  <footer>Unofficial offline build <span aria-hidden="true">·</span> Files stay on your computer.</footer>
+  <input id="file" type="file" hidden accept=".docx,.xlsx,.pptx">
+</main>
+<main id="editor" hidden></main><script type="module" src="../src/extension.ts"></script>
+</body></html>

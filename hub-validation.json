@@ -1,0 +1,10 @@
+{
+  "light": true,
+  "dark": true,
+  "mobile": true,
+  "icons": true,
+  "fontGate": true,
+  "fontImport": true,
+  "documentOpen": true,
+  "errors": []
+}
