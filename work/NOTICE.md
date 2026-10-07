@@ -1,4 +1,4 @@
-ONLYOFFICE Offline 0.5.0 — unofficial derivative
+ONLYOFFICE Offline 0.6.0 — unofficial derivative
 
 ONLYOFFICE is a trademark of Ascensio System SIA. This extension is not an
 official ONLYOFFICE release. Original logos and copyright notices are retained.
@@ -21,9 +21,9 @@ Sval template interpreter: MIT, SVAL-LICENSE included.
 The integration and packaging modifications are distributed under AGPL-3.0.
 Corresponding integration source and build instructions accompany the release.
 
-Changes: offline extension entry point, CSP adaptation, local converter,
+Changes: local recent-document snapshots, native back-to-hub controls, offline comments and tracked changes, expanded local formats, offline extension entry point, CSP adaptation, local converter,
 permission-based system font access, font-file import, per-tab font catalogs, metadata-only enumeration, on-demand outline loading, bounded font cache, persistent metadata and preview caches, corrected regular-weight preference, coalesced UI policy scans, local paginated PDF print previews,
 SFNT metadata/style/Unicode fallback generation, bounded converter font sets,
 corrected font picker name lookup, core-only menu policy, disabled
-macros, and OOXML-only input/export. Native editor UI is retained for the core
+macros, and validated Office/OpenDocument/RTF input/export and PDF download. Native editor UI is retained for the core
 workflow.

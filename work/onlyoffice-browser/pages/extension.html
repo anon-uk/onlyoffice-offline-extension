@@ -12,6 +12,7 @@
         <button data-type="xlsx" aria-label="Spreadsheet"><img src="/web-apps/apps/common/main/resources/img/doc-formats/xlsx.svg" alt="" width="48" height="60"><span>Spreadsheet</span><small aria-hidden="true">XLSX</small></button>
         <button data-type="pptx" aria-label="Presentation"><img src="/web-apps/apps/common/main/resources/img/doc-formats/pptx.svg" alt="" width="48" height="60"><span>Presentation</span><small aria-hidden="true">PPTX</small></button>
       </div></section>
+      <section id="recent-documents" aria-labelledby="recent-heading"><div class="section-heading"><h2 id="recent-heading">Recent documents</h2><button id="clear-recents">Clear recent documents</button></div><p class="recent-note">Local copies of opened and saved documents. Unsaved edits are not included.</p><ul id="recent-list"></ul><p id="recent-empty">No recent documents.</p></section>
       <section id="font-setup" aria-labelledby="fonts-heading"><h2 id="fonts-heading">Document fonts</h2><p id="font-status" role="status">Choose computer fonts or import font files to start.</p><div class="font-actions">
         <button id="computer-fonts" data-font-action>Use computer fonts</button><button id="import-fonts" data-font-action>Import font files</button><button id="clear-fonts" data-font-action>Clear imported fonts</button>
       </div><input id="font-files" type="file" hidden multiple accept=".ttf,.otf,.ttc"><details><summary>Font details</summary><pre id="font-details"></pre></details></section>
@@ -19,7 +20,8 @@
     </div>
   </div>
   <footer>Unofficial offline build <span aria-hidden="true">·</span> Files stay on your computer.</footer>
-  <input id="file" type="file" hidden accept=".docx,.xlsx,.pptx">
+  <input id="file" type="file" hidden accept=".docx,.xlsx,.pptx,.odt,.ods,.odp,.rtf">
 </main>
-<main id="editor" hidden></main><script type="module" src="../src/extension.ts"></script>
+<main id="editor" hidden></main>
+<dialog id="leave-dialog" aria-labelledby="leave-title"><h2 id="leave-title">Unsaved changes</h2><p>Save a copy before returning to Recent documents?</p><div class="dialog-actions"><button id="leave-save">Save and return</button><button id="leave-discard">Discard changes</button><button id="leave-cancel">Cancel</button></div></dialog><script type="module" src="../src/extension.ts"></script>
 </body></html>

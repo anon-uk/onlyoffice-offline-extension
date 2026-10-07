@@ -1,6 +1,6 @@
 from pathlib import Path
 import shutil,xml.etree.ElementTree as ET
-root=Path('work/onlyoffice-browser/extension-build-v0.5')
+root=Path('work/onlyoffice-browser/extension-build-v0.6')
 shutil.copy(root/'sdkjs/common/AllFonts.js',root/'server/FileConverter/bin/AllFonts.js')
 ns='http://www.w3.org/2000/svg'
 ET.register_namespace('',ns)

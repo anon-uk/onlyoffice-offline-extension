@@ -6,7 +6,7 @@ import { getRuntimeAssetPack } from './onlyoffice-browser/scripts/build-onlyoffi
 const require = createRequire(import.meta.url);
 const { parse } = require('./onlyoffice-browser/node_modules/@babel/parser');
 const sharp = require('./onlyoffice-browser/node_modules/sharp');
-const root = path.resolve('work/onlyoffice-browser/extension-build-v0.5');
+const root = path.resolve('work/onlyoffice-browser/extension-build-v0.6');
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]);
 }
@@ -86,7 +86,7 @@ fs.mkdirSync(root + '/icons', { recursive: true });
 for (const size of [16, 32, 48, 128]) await sharp(Buffer.from(mark)).resize(size,size).png().toFile(root + '/icons/onlyoffice-' + size + '.png');
 const icons = Object.fromEntries([16,32,48,128].map(size => [size, 'icons/onlyoffice-' + size + '.png']));
 fs.writeFileSync(root + '/manifest.json', JSON.stringify({
-  manifest_version: 3, name: 'ONLYOFFICE Offline (Unofficial)', version: '0.5.0',
+  manifest_version: 3, name: 'ONLYOFFICE Offline (Unofficial)', version: '0.6.0',
   description: 'Unofficial offline ONLYOFFICE document, spreadsheet and presentation editors. Use computer fonts and save local files.',
   icons, action: { default_title: 'Open ONLYOFFICE Offline', default_icon: icons },
   background: { service_worker: 'background.js' },

@@ -1,1 +1,1 @@
-No document font library is bundled. Computer fonts are read through Chrome Local Font Access with permission; imported fonts are supplied by the user and can be remembered locally. Font files are never uploaded. Original engine/UI glyph resources retain their original notices.
+No redistributable document font library is bundled. Fonts are read from Chrome Local Font Access or user-selected files. Computer font bytes remain in the tab; imported files can be remembered locally. Font files are never uploaded. Original engine/UI assets retain their own notices.

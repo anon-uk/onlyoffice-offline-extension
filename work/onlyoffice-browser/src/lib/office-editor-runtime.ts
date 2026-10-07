@@ -2012,6 +2012,7 @@ class BrowserOfficeEditor implements OfficeEditorInstance {
           embedded: undefined,
           customization: {
             help: true,
+            goback: {url:window.location.href,text:'Recent documents'},
             about: true,
             hideRightMenu: false,
             compactToolbar: false,
@@ -3255,8 +3256,9 @@ class BrowserOfficeEditor implements OfficeEditorInstance {
 
   private async createDownloadAsFileFromEvent(event: DownloadAsEvent): Promise<File> {
     const targetExt = getDownloadTargetExtension(event.data?.fileType, event.data?.url, getFileExtension(this.fileName));
-    const coreExt = { word: 'docx', cell: 'xlsx', slide: 'pptx' }[getDocumentType(this.fileType) || 'word'];
-    if (targetExt !== coreExt) throw new Error('This offline build saves DOCX, XLSX, and PPTX only.');
+    const coreExt = { word: 'docx', cell: 'xlsx', slide: 'pptx' }[getDocumentType(this.fileType) || 'word'] || 'docx';
+    const formats = {docx:['docx','odt','rtf'],xlsx:['xlsx','ods'],pptx:['pptx','odp']}[coreExt] || [];
+    if (!formats.includes(targetExt)) throw new Error('This format is unavailable in the offline build.');
     const url = event.data?.url;
     if (!url) {
       const file = await this.convertDownloadAsFile(targetExt, event.nativeOptions);

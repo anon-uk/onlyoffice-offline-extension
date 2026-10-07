@@ -1,10 +1,10 @@
-# ONLYOFFICE Offline — unofficial Chromium extension
+# ONLYOFFICE Offline 0.6.0 — unofficial Chrome extension
 
 Real ONLYOFFICE document, spreadsheet and presentation editors, with the original core editing UI and a local WebAssembly converter. No document font library is bundled.
 
 ## Install or update
 
-1. Extract a built `ONLYOFFICE-Offline.zip` (see [BUILD.md](BUILD.md) to build it).
+1. Extract `ONLYOFFICE-Offline.zip`.
 2. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
 3. Select the extracted `ONLYOFFICE Offline` folder containing `manifest.json`.
 4. Pin the extension and click its ONLYOFFICE icon.
@@ -21,11 +21,11 @@ Chrome cannot expose arbitrary browser-rendered font bytes through CSS alone. Th
 
 ## Core workflow
 
-Open DOCX, XLSX or PPTX, or create a document, spreadsheet or presentation. Each extension tab holds one file; click the extension icon for another tab. Formatting, font selection, tables, shapes and core spreadsheet/presentation tools use the native ONLYOFFICE UI.
+Open DOCX, XLSX, PPTX, ODT, ODS, ODP or RTF, or create a document, spreadsheet or presentation. Each extension tab holds one file; click the extension icon for another tab. Formatting, font selection, tables, shapes and core spreadsheet/presentation tools use the native ONLYOFFICE UI.
 
-**Save** downloads a copy. It does not overwrite the original file. Autosave and crash recovery are not provided.
+**Save** downloads a copy. It does not overwrite the original file. Recent documents keep local copies of opened files and completed saves, up to 20 files and 200 MB total (50 MB per file). They are snapshots, not live links to the original disk files. Unsaved edits are not included; remove individual entries or clear the list from the hub. Autosave and crash recovery are not provided.
 
-PDF/image/alternate-format export, macros, cloud collaboration, sharing/history, external plugins/AI, mail merge, signatures, comparison/combination, protection and server-only controls are removed from the exposed workflow. Download As offers only the current editor's DOCX, XLSX or PPTX format.
+Image export, macros, cloud collaboration, sharing/history, external plugins/AI, mail merge, signatures, comparison/combination, protection and server-only controls are removed from the exposed workflow. Download As offers PDF and the editor’s native format, plus ODT/RTF for documents, ODS for spreadsheets and ODP for presentations. ONLYOFFICE’s format-loss dialogs remain in place.
 
 This remains an experimental derivative. Complex files and every remaining ribbon command have not been exhaustively tested. See `Validation.md` for checks and limitations.
 
@@ -37,13 +37,15 @@ Choose **Print** in the native File menu, use the native Print toolbar control, 
 
 This is not an official ONLYOFFICE release. ONLYOFFICE is a trademark of Ascensio System SIA. Original logos and notices are retained. See `LICENSE`, `NOTICE.md`, `FONT-NOTICE.md` and `SVAL-LICENSE`.
 
-This repository contains integration source, packaging scripts, pinned upstream references and validation scripts.
+This repository contains the integration source, packaging scripts and validation scripts. See [BUILD.md](BUILD.md) to obtain the pinned editor assets and build the unpacked extension.
 
 The landing hub now matches ONLYOFFICE’s flat header, sidebar and document icons, with light/dark colors following your system preference.
 
-## Build from source
+## Review and navigation
 
-This repository contains the extension integration and modifications to a pinned upstream checkout. Follow [BUILD.md](BUILD.md) to obtain the engine assets and reproduce the build. Large generated editor assets are obtained from the pinned upstream checkout rather than stored in Git.
+The native comments and tracked-changes tools are enabled for offline review. Use the native return icon in the editor header or the File-menu return control to return to the hub. Unsaved changes offer Save and return, Discard changes, or Cancel. Saving also downloads a copy; recent storage never overwrites the original disk file.
+
+ONLYOFFICE editors are developed by Ascensio System SIA, Copyright (C) 2012–2026. The integration modifications are distributed under GNU AGPL v3; original ONLYOFFICE assets retain their copyright notices and logos. Browser adaptation: agentbridges-ai/onlyoffice-browser; converter: agentbridges-ai/onlyoffice-x2t-wasm. Sval retains its MIT notice. This is an unofficial modified derivative, not endorsed by ONLYOFFICE.
 
 ## Credits and license
 

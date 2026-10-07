@@ -1,7 +1,7 @@
 const {chromium}=require('./onlyoffice-browser/node_modules/@playwright/test');
 const fs=require('fs'),path=require('path');
 (async()=>{
- const root=path.resolve('work/onlyoffice-browser/extension-build-v0.5');
+ const root=path.resolve('work/onlyoffice-browser/extension-build-v0.6');
  const ctx=await chromium.launchPersistentContext('/tmp/onlyoffice-avenir-final-v5',{executablePath:path.resolve('work/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'),headless:true,viewport:{width:1440,height:1000},args:['--disable-extensions-except='+root,'--load-extension='+root]});
  try {
   const worker=ctx.serviceWorkers()[0]||await ctx.waitForEvent('serviceworker'),origin='chrome-extension://'+new URL(worker.url()).hostname,results=[];
@@ -26,7 +26,7 @@ await p.waitForFunction(()=>!document.querySelector('[data-type=docx]').disabled
    const font=f.locator('.combobox.fonts input').first();await font.fill('Avenir Next Condensed');await font.press('Enter');await p.waitForTimeout(1000);
    if(await f.locator('.modal:visible').count())throw new Error('Unexpected font warning');
    if(type==='Document'){await p.screenshot({path:'work/avenir-after/regular.png'});await f.locator('#id-toolbar-btn-bold').click();await f.locator('#id-toolbar-btn-italic').click();await f.locator('.combobox.fonts button').first().click();await p.waitForTimeout(500);await p.screenshot({path:'work/avenir-after/font-picker.png'});await font.press('Escape');}
-   await f.getByText('File',{exact:true}).first().click();const formats=await f.locator('.btn-doc-format[format]:visible').evaluateAll(es=>es.map(e=>e.getAttribute('format')));if(formats.some(x=>x!==({Document:'65',Spreadsheet:'257',Presentation:'129'})[type]))throw new Error('Unsupported export visible');await f.locator('#fm-btn-return').click();
+   await f.getByText('File',{exact:true}).first().click();const formats=await f.locator('.btn-doc-format[format]:visible').evaluateAll(es=>es.map(e=>e.getAttribute('format')));if(formats.some(x=>!({Document:['65','67','68','513'],Spreadsheet:['257','259','513'],Presentation:['129','131','513']})[type].includes(x)))throw new Error('Unsupported export visible');await f.locator('#fm-btn-return').click();
    const downloaded=p.waitForEvent('download',{timeout:90000});await f.getByRole('button',{name:/^Save \(/}).first().click();const download=await downloaded;await download.saveAs('work/avenir-after/validation.'+ext);await p.waitForFunction(()=>!window.__offlineEditor.getState().dirty);await p.screenshot({path:'work/avenir-after/'+ext+'.png'});
    const used=await p.evaluate(()=>Array.from(window.__officeFonts.used));console.log(type,'saved',used.length,'used font files');if(errors.length)throw new Error(errors.join('\n'));
    results.push({type,catalog,used,formats,errors,file:{name:download.suggestedFilename(),size:fs.statSync('work/avenir-after/validation.'+ext).size}});await p.close();

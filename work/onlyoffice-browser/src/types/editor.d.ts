@@ -39,6 +39,7 @@ interface DocEditorConfig {
       help: boolean;
       about: boolean;
       hideRightMenu: boolean;
+      goback?: {url:string;text?:string};
       /** Start with the native OnlyOffice ribbon collapsed. */
       compactToolbar?: boolean;
       /** OnlyOffice interface theme. Use modern values: theme-system, theme-white, or theme-night. */

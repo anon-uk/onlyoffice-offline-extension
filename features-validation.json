@@ -1,0 +1,51 @@
+{
+  "reviewRestored": {
+    "track": false,
+    "comments": [
+      {
+        "Id": "928",
+        "Data": {
+          "Text": "Offline comment test",
+          "Time": "1791385498000",
+          "UserName": "Local user",
+          "QuoteText": "Offline review sample.Tracked insertion test.",
+          "Solved": false,
+          "UserData": "",
+          "Replies": []
+        }
+      }
+    ]
+  },
+  "docx": {
+    "pdf": true,
+    "saveReturn": true,
+    "recentReopen": true
+  },
+  "xlsx": {
+    "pdf": true,
+    "saveReturn": true,
+    "recentReopen": true
+  },
+  "pptx": {
+    "pdf": true,
+    "saveReturn": true,
+    "recentReopen": true
+  },
+  "discard": true,
+  "persistence": true,
+  "additionalFormats": [
+    "odt",
+    "ods",
+    "odp",
+    "rtf"
+  ],
+  "nativeHeaderReturn": true,
+  "removal": true,
+  "errors": [],
+  "pdfTextVerified": true,
+  "commentXmlVerified": true,
+  "trackedInsertionXmlVerified": true,
+  "acceptedChangesXmlVerified": true,
+  "openDocumentTextVerified": true,
+  "reopenedFormatTextVerified": true
+}

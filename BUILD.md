@@ -10,7 +10,7 @@ From the root of your clone of this repository:
 4. Move the original overlay aside: `mv work/onlyoffice-browser work/integration-overlay`, then `mv work/upstream-runtime work/onlyoffice-browser`.
 5. In `work/onlyoffice-browser`, run `pnpm install --frozen-lockfile`, then `pnpm exec vite build -c vite.extension.config.ts`.
 6. Return to the repository root and run `node work/package-extension.mjs`.
-7. Load `work/onlyoffice-browser/extension-build-v0.5` unpacked in Chrome. To make an install ZIP, zip that directory with its contents under a single folder named `ONLYOFFICE Offline`.
+7. Load `work/onlyoffice-browser/extension-build-v0.6` unpacked in Chrome. To make an install ZIP, zip that directory with its contents under a single folder named `ONLYOFFICE Offline`.
 
 These preparation commands are for a fresh clone; do not repeat them over an already prepared build tree.
 
@@ -23,3 +23,5 @@ Browser validation scripts use Playwright and Chrome for Testing at `work/browse
 `verify-lazy-fonts.cjs` additionally checks outline cache size, renderer RSS, native Print controls and generated PDF files.
 
 Original engine source: https://github.com/ONLYOFFICE/sdkjs and https://github.com/ONLYOFFICE/web-apps. Converter source: https://github.com/agentbridges-ai/onlyoffice-x2t-wasm. See NOTICE.md and included licenses.
+
+For the 0.6.0 feature matrix, run `node work/verify-features.cjs` followed by `python3 work/verify-features-output.py` (requires pypdf). This checks native review, PDF/ODF/RTF output, reopen rendering, Recent documents and return-to-hub navigation. Earlier font reports describe 0.5.0 runs; updated helper scripts target the 0.6 build.

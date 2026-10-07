@@ -2,14 +2,15 @@
 (() => {
   if (!location.pathname.includes('/main/index.html')) return;
   const editor = location.pathname.includes('documenteditor') ? 'docx' : location.pathname.includes('spreadsheeteditor') ? 'xlsx' : 'pptx';
-  const format = {docx:'65',xlsx:'257',pptx:'129'}[editor];
+  const formats = {docx:['65','67','68'],xlsx:['257','259'],pptx:['129','131']}[editor];
   const unavailable = [
-    '#toolbar #review', '#toolbar #plugins', '#toolbar #forms', '#toolbar #ai',
-    '#left-btn-comments', '#left-btn-chat', '#id-right-menu-mail-merge', '#id-right-menu-signature',
+    '#slot-btn-compare','#slot-btn-combine',
+    '#toolbar #plugins', '#toolbar #forms', '#toolbar #ai',
+    '#left-btn-chat', '#id-right-menu-mail-merge', '#id-right-menu-signature',
     '#slot-btn-edit-mode', '#tlb-box-users',
     '#fm-btn-create','#fm-btn-recent','#fm-btn-save-copy','#fm-btn-save-desktop',
     '#fm-btn-rename','#fm-btn-protect',
-    '#fm-btn-history','#fm-btn-rights','#fm-btn-back','#fm-btn-suggest',
+    '#fm-btn-history','#fm-btn-rights','#fm-btn-suggest',
     '.btn-header-pdf-mode', '.toolbar__icon.btn-macros', '.toolbar__icon.btn-macros-record',
     '.toolbar__icon.btn-mailmerge', '.toolbar__icon.btn-compare', '.toolbar__icon.btn-combine',
     '.toolbar__icon.btn-ai', '.toolbar__icon.btn-plugins'
@@ -19,6 +20,7 @@
   document.head.append(style);
   function hide(element) {
     if (element.closest('.format-item')) element = element.closest('.format-item');
+    else if (element.matches('.toolbar__icon')) element = element.closest('.btn-slot') || element.closest('.btn-group') || element.closest('button') || element;
     else if (element.tagName==='I') element = element.closest('button') || element;
     else if (element.parentElement?.tagName==='LI' && element.closest('#toolbar')) element=element.parentElement;
     if(element.hasAttribute('data-offline-unavailable'))return;
@@ -26,6 +28,9 @@
     element.setAttribute('aria-hidden','true');
   }
   function apply() {
+    const back=document.querySelector('#fm-btn-back');
+    if(back){back.style.display='';back.removeAttribute('disabled');back.classList.remove('disabled');back.setAttribute('aria-label','Back to Recent documents');back.setAttribute('title','Back to Recent documents');}
+
     const prototype=window.Common?.UI?.ComboBoxFonts?.prototype;
     if(prototype && !prototype.__offlineFontLookup){
       const original=prototype.onInputChanged;
@@ -38,7 +43,7 @@
     }
     document.querySelectorAll(unavailable).forEach(hide);
     document.querySelectorAll('.btn-doc-format[format]').forEach(element => {
-      if (element.getAttribute('format')!==format) hide(element);
+      if (![...formats,'513'].includes(element.getAttribute('format'))) hide(element);
     });
   }
   // Canvas/ruler updates are frequent. Coalesce scans once per frame and
@@ -50,6 +55,8 @@
   });
   observer.observe(document.documentElement,{childList:true,subtree:true});
   document.addEventListener('click',event=>{
+    if(event.target.closest?.('#fm-btn-back,#slot-btn-back')){event.preventDefault();event.stopImmediatePropagation();window.top.__officeHome?.();return;}
+    if(event.target.closest?.('.btn-doc-format[format="513"]')){event.preventDefault();event.stopImmediatePropagation();window.top.__officeExportPdf?.();return;}
     if(event.target.closest?.('#slot-hbtn-print,#slot-hbtn-print-quick,#fm-btn-print,#fm-btn-print-with-preview')){event.preventDefault();event.stopImmediatePropagation();window.top.__officePrint?.();return;}
     if(event.target.closest?.('[data-offline-unavailable]')){event.preventDefault();event.stopImmediatePropagation();}
   },true);
